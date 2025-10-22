@@ -7,12 +7,13 @@ text=""
 predicted_emotion=""
 predicted_emotion_img_url=""
 
+#renderize a página HTML
 @app.route("/")
 def home():
     entries = show_entry()
     return render_template("index.html", entries=entries)
     
-
+#preveja a emoção
 @app.route("/predict-emotion", methods=["POST"])
 def predict_emotion():
     input_text = request.json.get("text")
