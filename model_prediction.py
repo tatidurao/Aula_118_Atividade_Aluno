@@ -1,10 +1,27 @@
-import pandas as pd 
+import pandas as pd
 import numpy as np
+
 import tensorflow
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import load_model
 from datetime import datetime
+
+from keras.models import load_model
+from keras.saving import register_keras_serializable
+from keras.layers import LSTM
+
+@register_keras_serializable()
+class CompatibleLSTM(LSTM):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('time_major', None)  # remove argumento problemático
+        super().__init__(*args, **kwargs)
+
+model = load_model(
+    "./static/assets/model_file/Tweet_Emotion.h5",
+    custom_objects={"LSTM": CompatibleLSTM}
+)
+
 
 # Faça um dicionário de códigos e URLs para as diferentes emoções
 emo_code_url = {
@@ -23,6 +40,7 @@ emo_code_url = {
     "raiva": [12, "./static/assets/emoticons/anger.png"],
 }
 
+
 train_data = pd.read_csv("./static/assets/data_files/tweet_emotions.csv")    
 training_sentences = []
 
@@ -30,7 +48,7 @@ for i in range(len(train_data)):
     sentence = train_data.loc[i, "content"]
     training_sentences.append(sentence)
 
-model = load_model("./static/assets/model_file/Tweets_Text_Emotion.h5")
+#model = load_model("./static/assets/model_file/Tweet_Emotion.h5")
 
 vocab_size = 40000
 max_length = 100
@@ -66,18 +84,23 @@ def predict(text):
 
 #Exiba a entrada
 def show_entry():
+    #arquivo para salvar as entradas do diario
     day_entry_list = pd.read_csv("./static/assets/data_files/data_entry.csv")
 
+    #lista ou matriz para armazenar na ultima posição do arquivo utlizando iloc e o -1
     day_entry_list = day_entry_list.iloc[::-1]
-    
+    # 3 entradas são exibidas por vez então criamos 3 variaveis para armazenar
     date1 = (day_entry_list['date'].values[0])
-    #complete
+    date2 =(day_entry_list['date'].values[1])
+    date3 = (day_entry_list['date'].values[2])
 
     entry1 = day_entry_list['text'].values[0]
-    #complete
+    entry2 = day_entry_list['text'].values[1]
+    entry3 = day_entry_list['text'].values[2]
 
     emotion1 = day_entry_list["emotion"].values[0]
-    #complete
+    emotion2 = day_entry_list["emotion"].values[1]
+    emotion3 = day_entry_list["emotion"].values[2]
 
     emotion_url_1=""
     emotion_url_2=""
@@ -86,7 +109,10 @@ def show_entry():
     for key, value in emo_code_url.items():
         if key==emotion1:
             emotion_url_1 = value[1]
-        #complete
+        if key==emotion2:
+            emotion_url_2 = value[1]
+        if key==emotion3:
+            emotion_url_3 = value[1]
 
     return [
         {
@@ -96,9 +122,15 @@ def show_entry():
             "emotion_url": emotion_url_1
         },
         {
-            #complete
+            "date": date2,
+            "entry": entry2,
+            "emotion": emotion2,
+            "emotion_url": emotion_url_2
         },
         {
-            #complete
+            "date": date3,
+            "entry": entry3,
+            "emotion": emotion3,
+            "emotion_url": emotion_url_3
         }
     ]
